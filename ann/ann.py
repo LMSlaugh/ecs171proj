@@ -4,6 +4,8 @@ from keras.layers import Dense
 import numpy
 import data_parse
 
+num_epochs = 50
+
 #collect all option permutations to use easily later on
 class ANN_Options:
     def __init__(self, activation_function, num_nodes_per_hidden, num_hidden_layers, batch_size, learning_rate):
@@ -15,15 +17,21 @@ class ANN_Options:
     def __str__(self):
         return "ANN_Options: (Act func: " + str(self.activation_func) + " | hid nodes: " + str(self.nodes_per_hidden) + " | hid layers: " + str(self.num_hidden_layers) + " | batch size: " + str(self.batch_size) + " | learning rate: " + str(self.learning_rate)
 
-def BuildAnn(xTrain,yTrain,hiddenLayerSize):
+def BuildAnn(xTrain, yTrain, ann_options):
     model = Sequential()
-    model.add(Dense(hiddenLayerSize,input_dim=xTrain.shape[1],activation='sigmoid'))
-    model.add(Dense(hiddenLayerSize,activation='sigmoid'))
-    model.add(Dense(1,activation='sigmoid'))
-    model.compile(loss='binary_crossentropy',optimizer='sgd',metrics=['accuracy'])
-    model.fit(xTrain,yTrain,epochs=20,batch_size=32)
-    model.fit(xTrain,yTrain,epochs=20,batch_size=32)
-    score = model.evaluate(xTrain,yTrain,batch_size=32)
+    #input layer?
+    model.add(Dense(ann_options.nodes_per_hidden,input_dim=xTrain.shape[1],activation=ann_options.activation_func))
+    #hidden layers
+    for n in range(0, ann_options.num_hidden_layers):
+        model.add(Dense(ann_options.nodes_per_hidden,activation=ann_options.activation_func))
+    #output layer
+    model.add(Dense(1,activation='softmax'))
+    #stochastic gradient descent:
+    optimizerSGD = keras.optimizers.SGD(lr=ann_options.learning_rate, momentum=0.0, decay=0.0, nesterov=False)  # change learning rate
+    model.compile(loss='binary_crossentropy', optimizer=optimizerSGD, metrics=['accuracy'])
+    model.fit(xTrain, yTrain, epochs=num_epochs, batch_size=ann_options.batch_size)
+    score = model.evaluate(xTrain, yTrain, batch_size=32)
+    return score
 
 
 data_csv = data_parse.read_data()
