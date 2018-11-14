@@ -2,9 +2,17 @@ import keras
 from keras.models import Sequential
 from keras.layers import Dense
 import numpy
-import data_parse
+import pandas
+
 
 num_epochs = 50
+
+
+#reads data from file
+def read_data():
+    data_csv = pandas.read_csv('scc_data_to_use.csv', index_col = 0, parse_dates=True, infer_datetime_format=True)
+    return data_csv
+
 
 #collect all option permutations to use easily later on
 class ANN_Options:
@@ -17,6 +25,8 @@ class ANN_Options:
     def __str__(self):
         return "ANN_Options: (Act func: " + str(self.activation_func) + " | hid nodes: " + str(self.nodes_per_hidden) + " | hid layers: " + str(self.num_hidden_layers) + " | batch size: " + str(self.batch_size) + " | learning rate: " + str(self.learning_rate)
 
+
+#main function to build the ann
 def BuildAnn(xTrain, yTrain, ann_options):
     model = Sequential()
     #input layer?
@@ -31,14 +41,17 @@ def BuildAnn(xTrain, yTrain, ann_options):
     model.compile(loss='binary_crossentropy', optimizer=optimizerSGD, metrics=['accuracy'])
     model.fit(xTrain, yTrain, epochs=num_epochs, batch_size=ann_options.batch_size)
     score = model.evaluate(xTrain, yTrain, batch_size=32)
+    #
     return score
 
 
-data_csv = data_parse.read_data()
+#collect all the data
+data_csv = read_data()
 print("Data csv type: " + str(type(data_csv)))
 data = data_csv.values
 print("Data type: " + str(type(data)))
-print(data)
+#print(data)
+
 
 #all permutations of these for grid search:
 #activation functions:
