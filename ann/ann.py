@@ -3,9 +3,10 @@ from keras.models import Sequential
 from keras.layers import Dense
 import numpy
 import pandas
+import matplotlib.pyplot as plt
 
 
-num_epochs = 50
+num_epochs = 10
 
 
 #reads data from file
@@ -45,16 +46,16 @@ def BuildAnn(X_TRAIN, Y_TRAIN, X_TEST, Y_TEST, ann_options):
     optimizerSGD = keras.optimizers.SGD(lr=ann_options.learning_rate, momentum=0.0, decay=0.0, nesterov=False)
 
     model.compile(loss='binary_crossentropy', optimizer=optimizerSGD, metrics=['accuracy'])
-    model.fit(X_TRAIN, Y_TRAIN,
+    history = model.fit(X_TRAIN, Y_TRAIN,
               epochs = num_epochs,
               batch_size = ann_options.batch_size,
               validation_data = (X_TEST, Y_TEST),
               verbose = 1)    #verbose 0 silent, verbose 1 = progress bar
 
-    training_score = model.evaluate(X_TRAIN, Y_TRAIN, batch_size=ann_options.batch_size)
-    testing_score  = model.evaluate(X_TEST , Y_TEST , batch_size=ann_options.batch_size)
-    # need to return the TRAINING ERROR, TESTING ERROR, TRAINING ACCURACY, TESTING ACCURACY
-    return (training_score, testing_score)
+    training_res = model.evaluate(X_TRAIN, Y_TRAIN, batch_size=ann_options.batch_size)
+    testing_res  = model.evaluate(X_TEST , Y_TEST , batch_size=ann_options.batch_size)
+    # need to return the TRAINING LOSS, TRAINING ACCURACY, TESTING LOSS, TESTING ACCURACY
+    return (training_res[0], training_res[1], testing_res[0], testing_res[1], history)
 
 
 #collect all the data
@@ -100,11 +101,41 @@ training_set_size = int(len(data) * split)
 data_TRAINING = data[:training_set_size,:]
 data_TESTING  = data[training_set_size:,:]
 #split into features / classes
+last_column_index = len(data[0]) - 1
 #TRAINGING
-X_TRAINING = data_TRAINING[:, :8]   #all features
-Y_TRAINING = data_TRAINING[:, 8]    #occupied (0 or 1)
+X_TRAINING = data_TRAINING[:, :last_column_index]   #all features
+Y_TRAINING = data_TRAINING[:, last_column_index]    #occupied (0 or 1)
 #TESTING
-X_TESTING  = data_TESTING [:, :8]   #all features
-Y_TESTING  = data_TESTING [:, 8]    #classes
+X_TESTING  = data_TESTING [:, :last_column_index]   #all features
+Y_TESTING  = data_TESTING [:, last_column_index]    #classes
+
+#print(Y_TESTING)
 
 #run a few options, testing to see if the ann works well or not
+testing_options = ANN_Options('sigmoid', 3, 2, 32, 0.01)
+results = BuildAnn(X_TRAINING, Y_TRAINING, X_TESTING, Y_TESTING, testing_options)
+history = results[4]    #gathers loss and accuracy over the training process
+
+print("")
+print("Training loss: ", results[0])
+print("Training accuracy: ", results[1])
+print("Testing loss: ", results[2])
+print("Testing accuracy: ", results[3])
+
+#print graph of loss / accuracy to make sure its actually working
+epochs_X = numpy.linspace(1, num_epochs, num_epochs)
+plt.plot(epochs_X, history.history.get('loss'), label="TRAINING LOSS")
+plt.plot(epochs_X, history.history.get('val_loss'), label="TESTING LOSS")
+plt.legend()
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
