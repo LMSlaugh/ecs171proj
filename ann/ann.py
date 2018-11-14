@@ -1,4 +1,4 @@
-import keras
+from keras.optimizers import SGD
 from keras.models import Sequential
 from keras.layers import Dense
 import numpy
@@ -11,8 +11,7 @@ num_epochs = 10
 
 #reads data from file
 def read_data():
-    data_csv = pandas.read_csv('scc_data_to_use.csv', index_col = 0, parse_dates=True, infer_datetime_format=True)
-    return data_csv
+    return pandas.read_csv('scc_data_to_use.csv', index_col = 0, parse_dates=True, infer_datetime_format=True)
 
 
 #collect all option permutations to use easily later on
@@ -36,26 +35,31 @@ class ANN_Options:
 def BuildAnn(X_TRAIN, Y_TRAIN, X_TEST, Y_TEST, ann_options):
     model = Sequential()
     #input layer?
-    model.add(Dense(ann_options.nodes_per_hidden,input_dim=X_TRAIN.shape[1],activation=ann_options.activation_func))
+    model.add(Dense(ann_options.nodes_per_hidden,input_dim=X_TRAIN.shape[1],activation=ann_options.activation_func, use_bias=True))
     #hidden layers
     for n in range(0, ann_options.num_hidden_layers):
-        model.add(Dense(ann_options.nodes_per_hidden,activation=ann_options.activation_func))
+        model.add(Dense(ann_options.nodes_per_hidden,activation=ann_options.activation_func, use_bias=True))
     #output layer
     model.add(Dense(1,activation='softmax'))
     #stochastic gradient descent:
-    optimizerSGD = keras.optimizers.SGD(lr=ann_options.learning_rate, momentum=0.0, decay=0.0, nesterov=False)
+    optimizerSGD = SGD(lr=ann_options.learning_rate, momentum=0.0, decay=0.0, nesterov=False)
 
     model.compile(loss='binary_crossentropy', optimizer=optimizerSGD, metrics=['accuracy'])
-    history = model.fit(X_TRAIN, Y_TRAIN,
+    #model.compile(optimizer= 'adam', loss ="sparse_categorical_crossentropy", metrics = ['accuracy'])
+    hist = model.fit(X_TRAIN, Y_TRAIN,
               epochs = num_epochs,
               batch_size = ann_options.batch_size,
               validation_data = (X_TEST, Y_TEST),
               verbose = 1)    #verbose 0 silent, verbose 1 = progress bar
 
+    #evalaute or predict
     training_res = model.evaluate(X_TRAIN, Y_TRAIN, batch_size=ann_options.batch_size)
     testing_res  = model.evaluate(X_TEST , Y_TEST , batch_size=ann_options.batch_size)
-    # need to return the TRAINING LOSS, TRAINING ACCURACY, TESTING LOSS, TESTING ACCURACY
-    return (training_res[0], training_res[1], testing_res[0], testing_res[1], history)
+    #training_res = model.predict(X_TRAIN, Y_TRAIN, batch_size=ann_options.batch_size)
+    #testing_res = model.predict(X_TEST, Y_TEST, batch_size=ann_options.batch_size)
+
+    # need to return the TRAINING LOSS, TRAINING ACCURACY, TESTING LOSS, TESTING ACCURACY, the HISTORY
+    return (training_res[0], training_res[1], testing_res[0], testing_res[1], hist)
 
 
 #collect all the data
@@ -109,7 +113,7 @@ Y_TRAINING = data_TRAINING[:, last_column_index]    #occupied (0 or 1)
 X_TESTING  = data_TESTING [:, :last_column_index]   #all features
 Y_TESTING  = data_TESTING [:, last_column_index]    #classes
 
-#print(Y_TESTING)
+#print(X_TRAINING[0])
 
 #run a few options, testing to see if the ann works well or not
 testing_options = ANN_Options('sigmoid', 3, 2, 32, 0.01)
@@ -122,10 +126,14 @@ print("Training accuracy: ", results[1])
 print("Testing loss: ", results[2])
 print("Testing accuracy: ", results[3])
 
+print(history.history.keys())
+
 #print graph of loss / accuracy to make sure its actually working
 epochs_X = numpy.linspace(1, num_epochs, num_epochs)
-plt.plot(epochs_X, history.history.get('loss'), label="TRAINING LOSS")
-plt.plot(epochs_X, history.history.get('val_loss'), label="TESTING LOSS")
+plt.plot(epochs_X, history.history.get('loss'), label="LOSS")
+plt.plot(epochs_X, history.history.get('val_loss'), label="VAL_LOSS")
+plt.plot(epochs_X, history.history.get('acc'), label="ACC")
+plt.plot(epochs_X, history.history.get('val_acc'), label="VAL_ACC")
 plt.legend()
 plt.show()
 
