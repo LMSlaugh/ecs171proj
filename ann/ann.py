@@ -26,23 +26,35 @@ class ANN_Options:
         return "ANN_Options: (Act func: " + str(self.activation_func) + " | hid nodes: " + str(self.nodes_per_hidden) + " | hid layers: " + str(self.num_hidden_layers) + " | batch size: " + str(self.batch_size) + " | learning rate: " + str(self.learning_rate)
 
 
-#main function to build the ann
-def BuildAnn(xTrain, yTrain, ann_options):
+"""
+    main function to build the ann
+    X_TRAIN, Y_TRAIN = testing data
+    X_TEST, Y_TEST   = testing data
+    ann_options      = an instance of ANN_Options to specify the options for the ann
+"""
+def BuildAnn(X_TRAIN, Y_TRAIN, X_TEST, Y_TEST, ann_options):
     model = Sequential()
     #input layer?
-    model.add(Dense(ann_options.nodes_per_hidden,input_dim=xTrain.shape[1],activation=ann_options.activation_func))
+    model.add(Dense(ann_options.nodes_per_hidden,input_dim=X_TRAIN.shape[1],activation=ann_options.activation_func))
     #hidden layers
     for n in range(0, ann_options.num_hidden_layers):
         model.add(Dense(ann_options.nodes_per_hidden,activation=ann_options.activation_func))
     #output layer
     model.add(Dense(1,activation='softmax'))
     #stochastic gradient descent:
-    optimizerSGD = keras.optimizers.SGD(lr=ann_options.learning_rate, momentum=0.0, decay=0.0, nesterov=False)  # change learning rate
+    optimizerSGD = keras.optimizers.SGD(lr=ann_options.learning_rate, momentum=0.0, decay=0.0, nesterov=False)
+
     model.compile(loss='binary_crossentropy', optimizer=optimizerSGD, metrics=['accuracy'])
-    model.fit(xTrain, yTrain, epochs=num_epochs, batch_size=ann_options.batch_size)
-    score = model.evaluate(xTrain, yTrain, batch_size=32)
-    #
-    return score
+    model.fit(X_TRAIN, Y_TRAIN,
+              epochs = num_epochs,
+              batch_size = ann_options.batch_size,
+              validation_data = (X_TEST, Y_TEST),
+              verbose = 1)    #verbose 0 silent, verbose 1 = progress bar
+
+    training_score = model.evaluate(X_TRAIN, Y_TRAIN, batch_size=ann_options.batch_size)
+    testing_score  = model.evaluate(X_TEST , Y_TEST , batch_size=ann_options.batch_size)
+    # need to return the TRAINING ERROR, TESTING ERROR, TRAINING ACCURACY, TESTING ACCURACY
+    return (training_score, testing_score)
 
 
 #collect all the data
@@ -71,10 +83,11 @@ for act in activation_functions:
             for batch_size in batch_sizes:
                 for learning_rate in learning_rates:
                     option_permutations.append(ANN_Options(act, num_nodes, num_layers, batch_size, learning_rate))
-
+"""
 print("Activation function\tnum_nodes\tnum_layers\tbatch_size\tlearning_rate")
 for options in option_permutations:
     print(options)
+"""
 
 ####################
 #shuffle data
@@ -93,3 +106,5 @@ Y_TRAINING = data_TRAINING[:, 8]    #occupied (0 or 1)
 #TESTING
 X_TESTING  = data_TESTING [:, :8]   #all features
 Y_TESTING  = data_TESTING [:, 8]    #classes
+
+#run a few options, testing to see if the ann works well or not
