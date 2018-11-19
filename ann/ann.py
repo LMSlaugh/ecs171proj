@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 #reads data from file
 def read_data():
-    return pandas.read_csv('scc_data_to_use.csv', index_col = 0, parse_dates=True, infer_datetime_format=True)
+    return pandas.read_csv('scc_data_to_use_normalized.csv', index_col = 0, parse_dates=True, infer_datetime_format=True)
 
 
 #collect all option permutations to use easily later on
@@ -117,6 +117,7 @@ Y_TESTING  = data_TESTING [:, last_column_index]    #classes
 
 #print(X_TRAINING[0])
 
+
 #run a few options, testing to see if the ann works well or not
 """
 testing_options = ANN_Options('sigmoid', 12, 2, 32, 0.01)
@@ -133,7 +134,7 @@ print("Testing accuracy: ", results[3])
 print(history.history.keys())
 
 #print graph of loss / accuracy to make sure its actually working
-epochs_X = numpy.linspace(1, num_epochs, num_epochs)
+epochs_X = numpy.linspace(1, len(history.history.get('loss')), len(history.history.get('loss')))
 plt.plot(epochs_X, history.history.get('loss'), label="LOSS")
 plt.plot(epochs_X, history.history.get('val_loss'), label="VAL_LOSS")
 plt.plot(epochs_X, history.history.get('acc'), label="ACC")
@@ -142,6 +143,7 @@ plt.legend()
 plt.show()
 """
 
+
 #perform the grid search
 for i in range(len(option_permutations)):
     options = option_permutations[i]
@@ -149,9 +151,8 @@ for i in range(len(option_permutations)):
     print("Training: " + str(options))
     results = BuildAnn(X_TRAINING, Y_TRAINING, X_TESTING, Y_TESTING, options, verbose=False)
     #save results (accuracies and losses) to file
-    with open("gridSearch.txt", "a") as gridSearchFile:
+    with open("gridSearch.csv", "a") as gridSearchFile:
         gridSearchFile.write(options.writeToFile() + "," + str(results[0]) + "," + str(results[1]) + "," + str(results[2]) + "," + str(results[3]) + "\n")
 
     print("")
 print("\n###GRID SEARCH DONE!\n###")
-
