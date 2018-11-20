@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plot
 import sklearn as sk
 
-from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 
 # Negative data not valid so have to use normalized data
@@ -16,9 +15,12 @@ column_names = data.columns.values[:-1]
 featureData = data.iloc[:, :-1].values # Remove output labels
 outputLabels = data.iloc[:,-1].values # Get only output labels
 
-kbest = SelectKBest(score_func=chi2)
-kbest.fit(featureData, outputLabels)
-ranking = kbest.scores_
+chi2 = chi2(featureData, outputLabels)
+ranking = chi2[0] # Chi2 statistics
+
+print("p value of each feature")
+for i in range(len(column_names)):
+    print(column_names[i] + ": " + "%E" % chi2[1][i]) # p values
 
 # Plot the scores of each feature
 plot.bar(column_names, ranking)
