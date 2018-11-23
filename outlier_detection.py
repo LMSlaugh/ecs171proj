@@ -95,7 +95,8 @@ result = max(accuracy_scores, key=accuracy_scores.get)
 
 # remove outliers
 featureData = np.delete(featureData, eval(result), axis=0)
+outputLabels = np.delete(outputLabels, eval(result), axis=0)
 
 featureData = pd.DataFrame(featureData, columns=[column_names])
-
+featureData['Occupancy'] = outputLabels
 output = featureData.to_csv('Dataset/scc_data_to_use_no_outliers.csv', index=False)
