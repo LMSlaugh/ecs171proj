@@ -9,6 +9,8 @@ from sklearn.metrics import roc_curve
 from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import auc
 from sklearn import linear_model
+from sklearn.ensemble import RandomForestClassifier
+import numpy as np
 
 
 #reads data from file
@@ -109,6 +111,10 @@ print("Testing accuracy: ", results[3])
 mod = linear_model.LogisticRegression(solver="sag",max_iter=3000)
 LR_model = mod.fit(X_TRAINING,Y_TRAINING)
 
+# Supervised transformation based on random forests
+rf = RandomForestClassifier(max_depth=10, n_estimators=100)
+rf.fit(X_TRAINING, np.ravel(Y_TRAINING))
+
 #Plot ROC and PR curves
 plt.style.use('ggplot')
 
@@ -126,9 +132,17 @@ auc_keras = auc(fpr_keras, tpr_keras)
 prec_keras, rec_keras, _ = precision_recall_curve(Y_TESTING, y_pred)
 auc_keras_pr = auc(rec_keras, prec_keras)
 
+y_pred_rf = rf.predict_proba(X_TESTING)[:, 1]
+fpr_rf, tpr_rf, thresholds_rf = roc_curve(Y_TESTING, y_pred_rf)
+auc_rf = auc(fpr_rf, tpr_rf)
+
+prec_rf, rec_rf, _ = precision_recall_curve(Y_TESTING, y_pred_rf)
+auc_rf_pr = auc(rec_rf, prec_rf)
+
 plt.figure(1)
 plt.plot([0, 1], [0, 1], 'k--')
 plt.plot(fpr_keras, tpr_keras, label='Keras (area = {:.3f})'.format(auc_keras))
+plt.plot(fpr_rf, tpr_rf, label='RF (area = {:.3f})'.format(auc_rf))
 plt.plot(fpr_lr, tpr_lr, label='LR (area = {:.3f})'.format(auc_lr))
 plt.xlabel('False positive rate')
 plt.ylabel('True positive rate')
@@ -142,6 +156,7 @@ plt.xlim(-0.01, 0.25)
 plt.ylim(0.75, 1.01)
 plt.plot([0, 1], [0, 1], 'k--')
 plt.plot(fpr_keras, tpr_keras, label='Keras (area = {:.3f})'.format(auc_keras))
+plt.plot(fpr_rf, tpr_rf, label='RF (area = {:.3f})'.format(auc_rf))
 plt.plot(fpr_lr, tpr_lr, label='LR (area = {:.3f})'.format(auc_lr))
 plt.xlabel('False positive rate')
 plt.ylabel('True positive rate')
@@ -155,6 +170,7 @@ plt.xlim(-0.01, 1.01)
 plt.ylim(-0.01, 1.01)
 plt.plot([0, 1], [0.5, 0.5], 'k--')
 plt.plot(rec_keras, prec_keras, label='Keras (area = {:.3f})'.format(auc_keras_pr))
+plt.plot(rec_rf, prec_rf, label='RF (area = {:.3f})'.format(auc_rf_pr))
 plt.plot(rec_lr, prec_lr, label='LR (area = {:.3f})'.format(auc_lr_pr))
 plt.xlabel('Recall')
 plt.ylabel('Precision')
@@ -168,6 +184,7 @@ plt.xlim(0.6, 1.01)
 plt.ylim(0.6, 1.01)
 plt.plot([0, 1], [0.5, 0.5], 'k--')
 plt.plot(rec_keras, prec_keras, label='Keras (area = {:.3f})'.format(auc_keras_pr))
+plt.plot(rec_rf, prec_rf, label='RF (area = {:.3f})'.format(auc_rf_pr))
 plt.plot(rec_lr, prec_lr, label='LR (area = {:.3f})'.format(auc_lr_pr))
 plt.xlabel('Recall')
 plt.ylabel('Precision')
