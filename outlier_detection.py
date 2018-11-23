@@ -5,6 +5,8 @@ from sklearn.ensemble import IsolationForest
 from sklearn import svm
 from sklearn.covariance import EllipticEnvelope
 from sklearn.metrics import accuracy_score
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # Importing data
 data = pd.read_csv("Dataset/scc_data_to_use_normalized_features_removed.csv", header=0)
@@ -26,7 +28,6 @@ for i in range(len(detected_results_IS)):
 
 IS_data = np.delete(featureData, (outliers_IS), axis=0)
 output_IS = np.delete(outputLabels, (outliers_IS), axis=0)
-print(len(outliers_IS))
 
 # LOF
 LOF = LocalOutlierFactor(n_neighbors=20, contamination='auto')
@@ -40,7 +41,6 @@ for i in range(len(detected_results_LOF)):
 
 LOF_data = np.delete(featureData, (outliers_LOF), axis=0)
 output_LOF = np.delete(outputLabels, (outliers_LOF), axis=0)
-print(len(outliers_LOF))
 
 # SVM
 SVM = svm.OneClassSVM(gamma='auto')
@@ -54,7 +54,6 @@ for i in range(len(detected_results_SVM)):
 
 SVM_data = np.delete(featureData, (outliers_SVM), axis=0)
 output_SVM = np.delete(outputLabels, (outliers_SVM), axis=0)
-print(len(outliers_SVM))
 
 # Elliptic envelope
 EE = EllipticEnvelope()
@@ -68,7 +67,6 @@ for i in range(len(detected_results_EE)):
 
 EE_data = np.delete(featureData, (outliers_EE), axis=0)
 output_EE = np.delete(outputLabels, (outliers_EE), axis=0)
-print(len(outliers_EE))
 
 # Compare the outlier results
 accuracy_scores = {}
