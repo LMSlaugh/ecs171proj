@@ -229,5 +229,11 @@ DerivedData/
 !*.xcworkspace/contents.xcworkspacedata
 /*.gcno
 
+# LaTex
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.synctex.gz
 
 # End of https://www.gitignore.io/api/linux,xcode,macos,python,windows
