@@ -5,9 +5,17 @@ import numpy
 import pandas
 import matplotlib.pyplot as plt
 
+from sklearn.metrics import roc_curve
+from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import auc
+from sklearn import linear_model
+from sklearn.ensemble import RandomForestClassifier
+import numpy as np
+
 
 #reads data from file
 def read_data():
+    #return pandas.read_csv('scc_data_to_use_normalized.csv', index_col = 0, parse_dates=True, infer_datetime_format=True)
     return pandas.read_csv('Dataset/scc_data_to_use_no_outliers.csv', index_col = 0, parse_dates=True, infer_datetime_format=True)
 
 
@@ -61,40 +69,12 @@ def BuildAnn(X_TRAIN, Y_TRAIN, X_TEST, Y_TEST, ann_options, verbose=True):
     #testing_res = model.predict(X_TEST, Y_TEST, batch_size=ann_options.batch_size)
 
     # need to return the TRAINING LOSS, TRAINING ACCURACY, TESTING LOSS, TESTING ACCURACY, the HISTORY
-    return (training_res[0], training_res[1], testing_res[0], testing_res[1], hist)
+    return (training_res[0], training_res[1], testing_res[0], testing_res[1], hist, model)
 
 
 #collect all the data
 data_csv = read_data()
-print("Data csv type: " + str(type(data_csv)))
 data = data_csv.values
-print("Data type: " + str(type(data)))
-#print(data)
-
-
-#all permutations of these for grid search:
-#activation functions:
-activation_functions = ['tanh', 'sigmoid', 'elu', 'softplus', 'relu']
-number_of_nodes_per_layer = [3,6,9,12]
-number_of_hidden_layers   = range(1,4)  # 1 to 3 inclusive
-batch_sizes = [32]
-learning_rates = [0.001, 0.005, 0.01, 0.05, 0.1]
-
-print("\nNumber of permutations for grid search: ", end="")
-print(len(activation_functions) * len(number_of_nodes_per_layer) * len(number_of_hidden_layers) * len(batch_sizes) * len(learning_rates))
-
-option_permutations = []
-for act in activation_functions:
-    for num_nodes in number_of_nodes_per_layer:
-        for num_layers in number_of_hidden_layers:
-            for batch_size in batch_sizes:
-                for learning_rate in learning_rates:
-                    option_permutations.append(ANN_Options(act, num_nodes, num_layers, batch_size, learning_rate))
-"""
-print("Activation function\tnum_nodes\tnum_layers\tbatch_size\tlearning_rate")
-for options in option_permutations:
-    print(options)
-"""
 
 ####################
 #shuffle data
@@ -115,15 +95,12 @@ Y_TRAINING = data_TRAINING[:, last_column_index]    #occupied (0 or 1)
 X_TESTING  = data_TESTING [:, :last_column_index]   #all features
 Y_TESTING  = data_TESTING [:, last_column_index]    #classes
 
-#print(X_TRAINING[0])
-
-
-#run a few options, testing to see if the ann works well or not
-"""
-testing_options = ANN_Options('sigmoid', 12, 2, 32, 0.01)
+#Train ANN and LR
+testing_options = ANN_Options('elu', 12, 3, 32, 0.1)
 print("Training: " + testing_options.writeToFile())
 results = BuildAnn(X_TRAINING, Y_TRAINING, X_TESTING, Y_TESTING, testing_options, verbose=True)
 history = results[4]    #gathers loss and accuracy over the training process
+model = results[5]
 
 print("")
 print("Training loss: ", results[0])
@@ -131,28 +108,87 @@ print("Training accuracy: ", results[1])
 print("Testing loss: ", results[2])
 print("Testing accuracy: ", results[3])
 
-print(history.history.keys())
+mod = linear_model.LogisticRegression(solver="sag",max_iter=3000)
+LR_model = mod.fit(X_TRAINING,Y_TRAINING)
 
-#print graph of loss / accuracy to make sure its actually working
-epochs_X = numpy.linspace(1, len(history.history.get('loss')), len(history.history.get('loss')))
-plt.plot(epochs_X, history.history.get('loss'), label="LOSS")
-plt.plot(epochs_X, history.history.get('val_loss'), label="VAL_LOSS")
-plt.plot(epochs_X, history.history.get('acc'), label="ACC")
-plt.plot(epochs_X, history.history.get('val_acc'), label="VAL_ACC")
-plt.legend()
+# Supervised transformation based on random forests
+rf = RandomForestClassifier(max_depth=10, n_estimators=100)
+rf.fit(X_TRAINING, np.ravel(Y_TRAINING))
+
+#Plot ROC and PR curves
+plt.style.use('ggplot')
+
+y_predict_prob = LR_model.predict_proba(X_TESTING)[:,1]
+fpr_lr, tpr_lr, _ = roc_curve(Y_TESTING, y_predict_prob)
+auc_lr = auc(fpr_lr, tpr_lr)
+
+prec_lr, rec_lr, _ = precision_recall_curve(Y_TESTING, y_predict_prob)
+auc_lr_pr = auc(rec_lr, prec_lr)
+
+y_pred = model.predict(X_TESTING).ravel()
+fpr_keras, tpr_keras, thresholds_keras = roc_curve(Y_TESTING, y_pred)
+auc_keras = auc(fpr_keras, tpr_keras)
+
+prec_keras, rec_keras, _ = precision_recall_curve(Y_TESTING, y_pred)
+auc_keras_pr = auc(rec_keras, prec_keras)
+
+y_pred_rf = rf.predict_proba(X_TESTING)[:, 1]
+fpr_rf, tpr_rf, thresholds_rf = roc_curve(Y_TESTING, y_pred_rf)
+auc_rf = auc(fpr_rf, tpr_rf)
+
+prec_rf, rec_rf, _ = precision_recall_curve(Y_TESTING, y_pred_rf)
+auc_rf_pr = auc(rec_rf, prec_rf)
+
+plt.figure(1)
+plt.plot([0, 1], [0, 1], 'k--')
+plt.plot(fpr_keras, tpr_keras, label='Keras (area = {:.3f})'.format(auc_keras))
+plt.plot(fpr_rf, tpr_rf, label='RF (area = {:.3f})'.format(auc_rf))
+plt.plot(fpr_lr, tpr_lr, label='LR (area = {:.3f})'.format(auc_lr))
+plt.xlabel('False positive rate')
+plt.ylabel('True positive rate')
+plt.title('ROC curve')
+plt.legend(loc='best')
+plt.savefig('Model Evaluation/ROC.png')
 plt.show()
-"""
 
+plt.figure(2)
+plt.xlim(-0.01, 0.25)
+plt.ylim(0.75, 1.01)
+plt.plot([0, 1], [0, 1], 'k--')
+plt.plot(fpr_keras, tpr_keras, label='Keras (area = {:.3f})'.format(auc_keras))
+plt.plot(fpr_rf, tpr_rf, label='RF (area = {:.3f})'.format(auc_rf))
+plt.plot(fpr_lr, tpr_lr, label='LR (area = {:.3f})'.format(auc_lr))
+plt.xlabel('False positive rate')
+plt.ylabel('True positive rate')
+plt.title('ROC curve (zoomed in at top left)')
+plt.legend(loc='best')
+plt.savefig('Model Evaluation/ROC_zoom.png')
+plt.show()
 
-#perform the grid search
-for i in range(len(option_permutations)):
-    options = option_permutations[i]
-    print(str(i) + " / " + str(len(option_permutations)))
-    print("Training: " + str(options))
-    results = BuildAnn(X_TRAINING, Y_TRAINING, X_TESTING, Y_TESTING, options, verbose=False)
-    #save results (accuracies and losses) to file
-    with open("gridSearch.csv", "a") as gridSearchFile:
-        gridSearchFile.write(options.writeToFile() + "," + str(results[0]) + "," + str(results[1]) + "," + str(results[2]) + "," + str(results[3]) + "\n")
+plt.figure(3)
+plt.xlim(-0.01, 1.01)
+plt.ylim(-0.01, 1.01)
+plt.plot([0, 1], [0.5, 0.5], 'k--')
+plt.plot(rec_keras, prec_keras, label='Keras (area = {:.3f})'.format(auc_keras_pr))
+plt.plot(rec_rf, prec_rf, label='RF (area = {:.3f})'.format(auc_rf_pr))
+plt.plot(rec_lr, prec_lr, label='LR (area = {:.3f})'.format(auc_lr_pr))
+plt.xlabel('Recall')
+plt.ylabel('Precision')
+plt.title('PR curve')
+plt.legend(loc='best')
+plt.savefig('Model Evaluation/PR.png')
+plt.show()
 
-    print("")
-print("\n###GRID SEARCH DONE!\n###")
+plt.figure(4)
+plt.xlim(0.6, 1.01)
+plt.ylim(0.6, 1.01)
+plt.plot([0, 1], [0.5, 0.5], 'k--')
+plt.plot(rec_keras, prec_keras, label='Keras (area = {:.3f})'.format(auc_keras_pr))
+plt.plot(rec_rf, prec_rf, label='RF (area = {:.3f})'.format(auc_rf_pr))
+plt.plot(rec_lr, prec_lr, label='LR (area = {:.3f})'.format(auc_lr_pr))
+plt.xlabel('Recall')
+plt.ylabel('Precision')
+plt.title('PR curve (zoomed in at top right)')
+plt.legend(loc='best')
+plt.savefig('Model Evaluation/PR_zoom.png')
+plt.show()
