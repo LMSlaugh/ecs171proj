@@ -1,7 +1,6 @@
 from keras.optimizers import SGD
 from keras.models import Sequential
 from keras.layers import Dense
-import numpy
 import pandas
 import matplotlib.pyplot as plt
 
@@ -78,7 +77,8 @@ data = data_csv.values
 
 ####################
 #shuffle data
-numpy.random.shuffle(data)
+np.random.seed(123456)
+np.random.shuffle(data)
 
 #split into testing / training
 #currently 70 - 30 split
@@ -95,12 +95,13 @@ Y_TRAINING = data_TRAINING[:, last_column_index]    #occupied (0 or 1)
 X_TESTING  = data_TESTING [:, :last_column_index]   #all features
 Y_TESTING  = data_TESTING [:, last_column_index]    #classes
 
-#Train ANN and LR
-#testing_options = ANN_Options('elu', 12, 3, 32, 0.1)
-testing_options = ANN_Options('relu', 6, 3, 32, 0.05)
+#---------- Start Model Evaluation & Comparision ----------
+#Train ANN, LR, and RF
+#testing_options = ANN_Options('elu', 12, 3, 32, 0.1) #Old dataset settings
+#testing_options = ANN_Options('relu', 6, 3, 32, 0.05) #New dataset settings
+testing_options = ANN_Options('elu', 9, 3, 32, 0.01)
 print("Training: " + testing_options.writeToFile())
 results = BuildAnn(X_TRAINING, Y_TRAINING, X_TESTING, Y_TESTING, testing_options, verbose=True)
-history = results[4]    #gathers loss and accuracy over the training process
 model = results[5]
 
 print("")
@@ -109,28 +110,25 @@ print("Training loss: ", results[0])
 print("Training accuracy: ", results[1])
 print("Testing loss: ", results[2])
 print("Testing accuracy: ", results[3])
-
+#Train Logistic Regression
 mod = linear_model.LogisticRegression(solver="sag",max_iter=3000)
 LR_model = mod.fit(X_TRAINING,Y_TRAINING)
 print("")
 print("-----LR-----")
 print("Testing Accuracy: ", LR_model.score(X_TESTING, Y_TESTING))
-
-# Supervised transformation based on random forests
+#Supervised transformation based on random forests
 rf = RandomForestClassifier(max_depth=10, n_estimators=100)
 rf.fit(X_TRAINING, np.ravel(Y_TRAINING))
-
 print("")
 print("-----RF-----")
 print("Testing Accuracy: ", rf.score(X_TESTING, Y_TESTING))
-
 #Plot ROC and PR curves
 plt.style.use('ggplot')
-
+#Determine TP and FP rate and AUC for each model
 y_predict_prob = LR_model.predict_proba(X_TESTING)[:,1]
 fpr_lr, tpr_lr, _ = roc_curve(Y_TESTING, y_predict_prob)
 auc_lr = auc(fpr_lr, tpr_lr)
-
+#Determine Precision and Recall for each model
 prec_lr, rec_lr, _ = precision_recall_curve(Y_TESTING, y_predict_prob)
 auc_lr_pr = auc(rec_lr, prec_lr)
 
