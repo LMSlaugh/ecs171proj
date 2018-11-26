@@ -3852,7 +3852,7 @@ which is provided to fool Hyperref.}}
 
 
 % TITLING OF SECTIONS
-\def\@IEEEsectpunct{:\ \,}  % Punctuation after run-in section heading  (headings which are
+\def\@IEEEsectpunct{\ \,}  % Punctuation after run-in section heading  (headings which are
                             % part of the paragraphs), need little bit more than a space
 
 \def\@seccntformat#1{\csname the#1dis\endcsname\hskip 0.5em\relax}
