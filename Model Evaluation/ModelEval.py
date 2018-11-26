@@ -96,13 +96,15 @@ X_TESTING  = data_TESTING [:, :last_column_index]   #all features
 Y_TESTING  = data_TESTING [:, last_column_index]    #classes
 
 #Train ANN and LR
-testing_options = ANN_Options('elu', 12, 3, 32, 0.1)
+#testing_options = ANN_Options('elu', 12, 3, 32, 0.1)
+testing_options = ANN_Options('relu', 6, 3, 32, 0.05)
 print("Training: " + testing_options.writeToFile())
 results = BuildAnn(X_TRAINING, Y_TRAINING, X_TESTING, Y_TESTING, testing_options, verbose=True)
 history = results[4]    #gathers loss and accuracy over the training process
 model = results[5]
 
 print("")
+print("------Keras-----")
 print("Training loss: ", results[0])
 print("Training accuracy: ", results[1])
 print("Testing loss: ", results[2])
@@ -110,10 +112,17 @@ print("Testing accuracy: ", results[3])
 
 mod = linear_model.LogisticRegression(solver="sag",max_iter=3000)
 LR_model = mod.fit(X_TRAINING,Y_TRAINING)
+print("")
+print("-----LR-----")
+print("Testing Accuracy: ", LR_model.score(X_TESTING, Y_TESTING))
 
 # Supervised transformation based on random forests
 rf = RandomForestClassifier(max_depth=10, n_estimators=100)
 rf.fit(X_TRAINING, np.ravel(Y_TRAINING))
+
+print("")
+print("-----RF-----")
+print("Testing Accuracy: ", rf.score(X_TESTING, Y_TESTING))
 
 #Plot ROC and PR curves
 plt.style.use('ggplot')
