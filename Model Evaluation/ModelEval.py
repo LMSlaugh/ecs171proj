@@ -64,8 +64,6 @@ def BuildAnn(X_TRAIN, Y_TRAIN, X_TEST, Y_TEST, ann_options, verbose=True):
     #evalaute or predict
     training_res = model.evaluate(X_TRAIN, Y_TRAIN, batch_size=ann_options.batch_size, verbose=verbose)
     testing_res  = model.evaluate(X_TEST , Y_TEST , batch_size=ann_options.batch_size, verbose=verbose)
-    #training_res = model.predict(X_TRAIN, Y_TRAIN, batch_size=ann_options.batch_size)
-    #testing_res = model.predict(X_TEST, Y_TEST, batch_size=ann_options.batch_size)
 
     # need to return the TRAINING LOSS, TRAINING ACCURACY, TESTING LOSS, TESTING ACCURACY, the HISTORY
     return (training_res[0], training_res[1], testing_res[0], testing_res[1], hist, model)
@@ -78,6 +76,7 @@ data = data_csv.values
 ####################
 #shuffle data
 np.random.seed(123456)
+#np.random.seed(999)
 np.random.shuffle(data)
 
 #split into testing / training
@@ -97,9 +96,11 @@ Y_TESTING  = data_TESTING [:, last_column_index]    #classes
 
 #---------- Start Model Evaluation & Comparision ----------
 #Train ANN, LR, and RF
+#(activation_function, num_nodes_per_hidden, num_hidden_layers, batch_size, learning_rate)
 #testing_options = ANN_Options('elu', 12, 3, 32, 0.1) #Old dataset settings
 #testing_options = ANN_Options('relu', 6, 3, 32, 0.05) #New dataset settings
-testing_options = ANN_Options('elu', 9, 3, 32, 0.01)
+testing_options = ANN_Options('elu', 9, 3, 32, 0.1) #New new dataset settings
+#testing_options = ANN_Options('relu', 10, 1, 32, 0.01)
 print("Training: " + testing_options.writeToFile())
 results = BuildAnn(X_TRAINING, Y_TRAINING, X_TESTING, Y_TESTING, testing_options, verbose=True)
 model = results[5]
