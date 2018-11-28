@@ -54,11 +54,11 @@ Preliminary investigations have shown that a significant portion of power is con
 % Introduction
 \section{INTRODUCTION}
 
-Buildings are responsible for a large amount of energy consumption in the United States - about 40%. \cite{Perez-Lombard} In an effort to reduce this number, previous work performed in a few UC Davis lecture halls and offices concluded that up to 50% of energy consumption occurred during times that the buildings were completely vacant. In all buildings, a significant portion of this usage came from a variety of dissimilar end-use devices such as audiovisual equipment, water fountains, lighting fixtures, computers, pumps, fans, and kitchen appliances \cite{Casillas} This unnecessary usage could be greatly reduced if periods of vacancy were determined in real time and communicated to end-use devices. The devices would be factory-equipped to receive this vacancy signal which would trigger them into a low-power state or turn them completely off. Though various methods exist to determine vacancy, they are insufficient. 
+Buildings are responsible for a large amount of energy consumption in the United States - about 40\%. \cite{Perez-Lombard} In an effort to reduce this number, previous work performed in a few UC Davis lecture halls and offices concluded that up to 50\% of energy consumption occurred during times that the buildings were completely vacant. In all buildings, a significant portion of this usage came from a variety of dissimilar end-use devices such as audiovisual equipment, water fountains, lighting fixtures, computers, pumps, fans, and kitchen appliances \cite{Casillas} This unnecessary usage could be greatly reduced if periods of vacancy were determined in real time and communicated to end-use devices. The devices would be factory-equipped to receive this vacancy signal which would trigger them into a low-power state or turn them completely off. Though various methods exist to determine vacancy, they are insufficient. 
 
 Currently, passive infrared (PIR) motion sensors are the most prevalent method of detecting vacancy. These are relatively inexpensive and are commonly encountered in lighting systems. Unfortunately, these are local controls that are not usually networked to other systems. This prevents the vacancy signal from being readily used in other applications.
 
-Another, less commonly encountered method uses specially-programmed cameras that sense presence through various algorithms such as depth analysis \cite{Peterson} or facial recognition \cite{Viola}. These methods have the benefit of providing an integer count of occupants, making them a great fit for predictive model control. However, these systems have high capital and maintenance costs and the overall system expenditure is not likely to outweigh the possible energy savings produced by vacancy turndowns.
+Another, less commonly encountered method uses specially-programmed cameras that sense presence through various algorithms such as depth analysis \cite{Petersen} or facial recognition \cite{Viola}. These methods have the benefit of providing an integer count of occupants, making them a great fit for predictive model control. However, these systems have high capital and maintenance costs and the overall system expenditure is not likely to outweigh the possible energy savings produced by vacancy turndowns.
 
 The work outlined in this paper assumes that a low-cost approach to determining vacancy is desired, and thus avoids hi-tech implementations that require installation of equipment such as cameras and additional sensors. It uses data that is already being captured in many UC Davis buildings - carbon dioxide, number of WiFi connections, and electricity demand - to determine when a building is vacant.
 
@@ -327,7 +327,7 @@ While testing accuracy is important, it is not the only indicator of the perform
 
 \section{CONCLUSION}
 
-Placeholder
+The objective of this report is to address the concern that an excessive amount of power is consumed during hours of vacancy in buildings. The report outlines a method of detecting vacancy via building data gathered by sensor outputs. Sample data from the UC Davis Student Community Center was used to test and train predictive models composed of logistic regression and an artificial neural network. Future work involves obtaining a similar data set for a large number of buildings, which would allow for clustering of buildings according to their their occupancy schedules. A model could then be built for each of these clusters, which is expected to yield more generalizable results. To further improve upon this approach, the configuration of sensors should be optimized such that faulty sensors are repaired and sensors are placed in areas that can accurately collect the data of a room. New types of sensors, such as microphones and motion detectors could also be added to rooms to diversify the collection of data, allowing for more accurate measurements of vacancy of buildings. This approach is an application of existing machine learning methods, showcasing the benefits and uses of artificial neural networks and regression.  It reinforces the idea that machine learning can be utilized for a wide variety of improvements.
 
 \addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
                                   % on the last page of the document manually. It shortens
@@ -364,13 +364,12 @@ Placeholder
 
 \end{thebibliography}
 
-\section{Contribution}
+\section{Contributions}
 
 \subsection*{Benjamen Neduva}
         \begin{itemize}
                 \item Initial feature analysis
                 \item Report outline
-                \item Presentation preparation
         \end{itemize}
 
 \subsection*{Calvin Cramer}
@@ -416,7 +415,7 @@ Placeholder
 
 \subsection*{Yasmin Sayeed}
         \begin{itemize}
-                \item Presentation preparation
+                \item N/A
         \end{itemize}
 
 \end{document}
